@@ -4,56 +4,54 @@ using UnityEngine;
 
 public class Old_Movement : MonoBehaviour
 {
-    [SerializeField] private Transform body;
     [SerializeField] private float speed;
-    SpriteRenderer rend;
-    Vector2 movement;
-
-    public float runSpeed = 10.0f;
+    private SpriteRenderer spr;
+    Vector3 worldBoundsMax;
+    Vector3 worldBoundsMin;
 
     private void Awake()
     {
-        rend = GetComponent<SpriteRenderer>();
+        spr = GetComponent<SpriteRenderer>();
+        worldBoundsMax = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height, 0));
+        worldBoundsMin = Camera.main.ScreenToWorldPoint(new Vector3(0, 0, 0));
     }
 
-    void Start()
+    private void FixedUpdate()
     {
-    
+        Move();
     }
-    
-    void Update()
+
+    private void Move()
     {
-        float i = Input.GetAxisRaw("Horizontal");
-        float j = Input.GetAxisRaw("Vertical");
+        float moveHorizontal = Input.GetAxis("Horizontal");
+        float moveVertical = Input.GetAxis("Vertical");
 
-        Vector3 maxPosWorld = rend.bounds.max;
-        Vector3 maxPosViweport = Camera.main.WorldToScreenPoint(maxPosWorld);
+        this.transform.Translate(moveHorizontal * speed * Time.deltaTime, moveVertical * speed * Time.deltaTime, 0.0f);
 
-        Vector3 sizeXWorld = Camera.main.WorldToScreenPoint(rend.bounds.size);
-        sizeXWorld.x /= sizeXWorld.z;
-        sizeXWorld.y /= sizeXWorld.z;
+        ChechForBounds();
+    }
 
-        if (maxPosViweport.y > Screen.height)
-        {
-            Debug.Log("Y " + maxPosViweport.y);
-        }
+    private void ChechForBounds()
+    {
+        Vector3 maxPosWorld = spr.bounds.max;
+        Vector3 maxPosViewPort = Camera.main.WorldToViewportPoint(maxPosWorld);
 
-        if (maxPosViweport.y - sizeXWorld.y < 0)
-        {
-            Debug.Log("Y less than 0" + maxPosViweport.y);
-        }
+        Vector3 minPosWorld = spr.bounds.min;
+        Vector3 minPosViewPort = Camera.main.WorldToViewportPoint(minPosWorld);
 
-        if (maxPosViweport.x > Screen.width)
-        {
-            Debug.Log("X " + maxPosViweport.x);
-        }
+        if (maxPosViewPort.x >= 1)
+            spr.transform.position = new Vector3(worldBoundsMin.x + spr.bounds.extents.x, transform.position.y, transform.position.z);
 
-        if (maxPosViweport.x - sizeXWorld.x < 0 )
-        {
-            Debug.Log("X less than 0 " + maxPosViweport.x);
-          //  body.position = new Vector3(Screen.width - Screen.width, transform.position.y);
-        }
+        if (minPosViewPort.x <= 0)
+            spr.transform.position = new Vector3(worldBoundsMax.x - spr.bounds.extents.x, transform.position.y, transform.position.z);
 
-        body.Translate(i * Time.deltaTime * speed, j * Time.deltaTime * speed,0);
-    }   
+        if (maxPosViewPort.y >= 1)
+            spr.transform.position = new Vector3(transform.position.x, worldBoundsMin.y + spr.bounds.extents.y, transform.position.z);
+
+        if (minPosViewPort.y <= 0)
+            spr.transform.position = new Vector3(transform.position.x, worldBoundsMax.y - spr.bounds.extents.y, transform.position.z);
+
+
+
+    }
 }
